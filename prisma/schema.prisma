@@ -1,14 +1,59 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+model User {
+  id                String      @id @default(cuid())
+  walletAddress     String      @unique
+  tagName           String?     @unique
+  bio               String?
+  avatarUrl         String?
+  instagram         String?
+  twitter           String?
+  tiktok            String?
+  showWalletAddress Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  preference        Preference?
+}
+
+model Tip {
+  id               String   @id @default(cuid())
+  txHash           String   @unique
+  coin             String
+  amount           String
+  senderAddress    String
+  recipientAddress String
+  note             String?
+  anonymous        Boolean  @default(false)
+  status           String   @default("confirmed")
+  createdAt        DateTime @default(now())
+}
+
+model Withdrawal {
+  id          String   @id @default(cuid())
+  txHash      String   @unique
+  coin        String
+  amount      String
+  fromAddress String
+  toAddress   String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
+
+model Preference {
+  id                      String  @id @default(cuid())
+  userId                  String  @unique
+  defaultCurrency         String  @default("USD")
+  minTipAmount            String  @default("0")
+  defaultThankYouMessage  String?
+  autoAcceptTips          Boolean @default(true)
+
+  user                    User    @relation(fields: [userId], references: [id])
 }
