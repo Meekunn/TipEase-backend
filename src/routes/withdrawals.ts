@@ -1,31 +1,38 @@
 import { Router, type Response } from "express";
 import prisma from "../lib/prisma.js";
 import authenticate, { type AuthRequest } from "../middleware/auth.js";
+import validate from "../middleware/validate.js";
+import { createWithdrawalSchema } from "../schemas/index.js";
 
 const router = Router();
 
 // POST /api/v1/withdrawals
-router.post("/", authenticate, async (req: AuthRequest, res: Response) => {
-  try {
-    const { txHash, coin, amount, toAddress } = req.body;
+router.post(
+  "/",
+  authenticate,
+  validate(createWithdrawalSchema),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { txHash, coin, amount, toAddress } = req.body;
 
-    const withdrawal = await prisma.withdrawal.create({
-      data: {
-        txHash,
-        coin,
-        amount,
-        fromAddress: req.user!.walletAddress,
-        toAddress,
-        status: "pending",
-      },
-    });
+      const withdrawal = await prisma.withdrawal.create({
+        data: {
+          txHash,
+          coin,
+          amount,
+          fromAddress: req.user!.walletAddress,
+          toAddress,
+          status: "pending",
+        },
+      });
 
-    res.status(201).json({ withdrawal });
-  } catch (error) {
-    console.error("Create withdrawal error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+      res.status(201).json({ withdrawal });
+    } catch (error) {
+      console.error("Create withdrawal error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
 
 // GET /api/v1/withdrawals/history
 router.get(

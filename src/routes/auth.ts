@@ -3,6 +3,8 @@ import { generateNonce, SiweMessage } from "siwe";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import authenticate, { type AuthRequest } from "../middleware/auth.js";
+import validate from "../middleware/validate.js";
+import { verifySchema } from "../schemas/index.js";
 
 const router = Router();
 
@@ -16,42 +18,46 @@ router.get("/nonce", (req: Request, res: Response) => {
 });
 
 // POST /api/v1/auth/verify
-router.post("/verify", async (req: Request, res: Response) => {
-  try {
-    const { message, signature } = req.body;
+router.post(
+  "/verify",
+  validate(verifySchema),
+  async (req: Request, res: Response) => {
+    try {
+      const { message, signature } = req.body;
 
-    const siweMessage = new SiweMessage(message);
+      const siweMessage = new SiweMessage(message);
 
-    const { data: fields } = await siweMessage.verify({ signature });
+      const { data: fields } = await siweMessage.verify({ signature });
 
-    if (!nonceStore.has(fields.nonce)) {
-      res.status(401).json({ error: "Invalid nonce" });
-      return;
+      if (!nonceStore.has(fields.nonce)) {
+        res.status(401).json({ error: "Invalid nonce" });
+        return;
+      }
+
+      nonceStore.delete(fields.nonce);
+
+      const user = await prisma.user.upsert({
+        where: { walletAddress: fields.address },
+        update: {},
+        create: {
+          walletAddress: fields.address,
+          tagName: `user_${fields.address.slice(2, 8)}`,
+        },
+      });
+
+      const token = jwt.sign(
+        { userId: user.id, walletAddress: user.walletAddress },
+        process.env.JWT_SECRET!,
+        { expiresIn: "7d" },
+      );
+
+      res.json({ token, user });
+    } catch (error) {
+      console.error("SIWE verify error:", error);
+      res.status(400).json({ error: "Verification failed" });
     }
-
-    nonceStore.delete(fields.nonce);
-
-    const user = await prisma.user.upsert({
-      where: { walletAddress: fields.address },
-      update: {},
-      create: {
-        walletAddress: fields.address,
-        tagName: `user_${fields.address.slice(2, 8)}`,
-      },
-    });
-
-    const token = jwt.sign(
-      { userId: user.id, walletAddress: user.walletAddress },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" },
-    );
-
-    res.json({ token, user });
-  } catch (error) {
-    console.error("SIWE verify error:", error);
-    res.status(400).json({ error: "Verification failed" });
-  }
-});
+  },
+);
 
 // GET /api/v1/auth/me
 router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {

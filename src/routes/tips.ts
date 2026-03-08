@@ -1,34 +1,41 @@
 import { Router, type Response } from "express";
 import prisma from "../lib/prisma.js";
 import authenticate, { type AuthRequest } from "../middleware/auth.js";
+import validate from "../middleware/validate.js";
+import { createTipSchema } from "../schemas/index.js";
 
 const router = Router();
 
 // POST /api/v1/tips
-router.post("/", authenticate, async (req: AuthRequest, res: Response) => {
-  try {
-    const { txHash, coin, amount, recipientAddress, note, anonymous } =
-      req.body;
+router.post(
+  "/",
+  authenticate,
+  validate(createTipSchema),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { txHash, coin, amount, recipientAddress, note, anonymous } =
+        req.body;
 
-    const tip = await prisma.tip.create({
-      data: {
-        txHash,
-        coin,
-        amount,
-        senderAddress: req.user!.walletAddress,
-        recipientAddress,
-        note,
-        anonymous: anonymous ?? false,
-        status: "confirmed",
-      },
-    });
+      const tip = await prisma.tip.create({
+        data: {
+          txHash,
+          coin,
+          amount,
+          senderAddress: req.user!.walletAddress,
+          recipientAddress,
+          note,
+          anonymous: anonymous ?? false,
+          status: "confirmed",
+        },
+      });
 
-    res.status(201).json({ tip });
-  } catch (error) {
-    console.error("Create tip error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+      res.status(201).json({ tip });
+    } catch (error) {
+      console.error("Create tip error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
 
 // GET /api/v1/tips/sent
 router.get("/sent", authenticate, async (req: AuthRequest, res: Response) => {

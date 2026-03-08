@@ -1,6 +1,8 @@
 import { Router, type Response } from "express";
 import prisma from "../lib/prisma.js";
 import authenticate, { type AuthRequest } from "../middleware/auth.js";
+import validate from "../middleware/validate.js";
+import { updateUserSchema } from "../schemas/index.js";
 
 const router = Router();
 
@@ -25,37 +27,42 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // PUT /api/v1/users/me
-router.put("/me", authenticate, async (req: AuthRequest, res: Response) => {
-  try {
-    const {
-      tagName,
-      bio,
-      avatarUrl,
-      instagram,
-      twitter,
-      tiktok,
-      showWalletAddress,
-    } = req.body;
+router.put(
+  "/me",
+  authenticate,
+  validate(updateUserSchema),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const {
+        tagName,
+        bio,
+        avatarUrl,
+        instagram,
+        twitter,
+        tiktok,
+        showWalletAddress,
+      } = req.body;
 
-    const user = await prisma.user.update({
-      where: { id: req.user!.userId },
-      data: {
-        ...(tagName !== undefined && { tagName }),
-        ...(bio !== undefined && { bio }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
-        ...(instagram !== undefined && { instagram }),
-        ...(twitter !== undefined && { twitter }),
-        ...(tiktok !== undefined && { tiktok }),
-        ...(showWalletAddress !== undefined && { showWalletAddress }),
-      },
-    });
+      const user = await prisma.user.update({
+        where: { id: req.user!.userId },
+        data: {
+          ...(tagName !== undefined && { tagName }),
+          ...(bio !== undefined && { bio }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
+          ...(instagram !== undefined && { instagram }),
+          ...(twitter !== undefined && { twitter }),
+          ...(tiktok !== undefined && { tiktok }),
+          ...(showWalletAddress !== undefined && { showWalletAddress }),
+        },
+      });
 
-    res.json({ user });
-  } catch (error) {
-    console.error("Update user error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+      res.json({ user });
+    } catch (error) {
+      console.error("Update user error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
 
 // GET /api/v1/users/:address
 router.get("/:address", async (req: AuthRequest, res: Response) => {
