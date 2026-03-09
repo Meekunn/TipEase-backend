@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import authenticate, { type AuthRequest } from "../middleware/auth.js";
 import validate from "../middleware/validate.js";
+import { authLimiter } from "../middleware/rateLimiter.js";
 import { verifySchema } from "../schemas/index.js";
 
 const router = Router();
@@ -11,7 +12,7 @@ const router = Router();
 const nonceStore = new Map<string, string>();
 
 // GET /api/v1/auth/nonce
-router.get("/nonce", (req: Request, res: Response) => {
+router.get("/nonce", authLimiter, (req: Request, res: Response) => {
   const nonce = generateNonce();
   nonceStore.set(nonce, nonce);
   res.json({ nonce });
@@ -20,6 +21,7 @@ router.get("/nonce", (req: Request, res: Response) => {
 // POST /api/v1/auth/verify
 router.post(
   "/verify",
+  authLimiter,
   validate(verifySchema),
   async (req: Request, res: Response) => {
     try {

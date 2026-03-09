@@ -1,0 +1,310 @@
+{
+  "info": {
+    "name": "TipEase API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get Nonce",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/auth/nonce",
+            "description": "Generate a one-time nonce for SIWE signing"
+          }
+        },
+        {
+          "name": "Verify Signature",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/verify",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"your-siwe-message\",\n  \"signature\": \"your-signature\"\n}"
+            },
+            "description": "Verify SIWE signature and return JWT"
+          }
+        },
+        {
+          "name": "Get Me (Auth)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/users/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/v1/users/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tagName\": \"myusername\",\n  \"bio\": \"My bio here\",\n  \"instagram\": \"myhandle\",\n  \"twitter\": \"myhandle\",\n  \"tiktok\": \"myhandle\",\n  \"showWalletAddress\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get User by Address",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/users/0xYourWalletAddressHere"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tips",
+      "item": [
+        {
+          "name": "Create Tip",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/tips",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txHash\": \"0xabc123def456abc123def456abc123def456abc123def456abc123def456abc1\",\n  \"coin\": \"ETH\",\n  \"amount\": \"0.01\",\n  \"recipientAddress\": \"0xRecipientAddressHere\",\n  \"note\": \"Great work!\",\n  \"anonymous\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Sent Tips",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/tips/sent",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Received Tips",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/tips/received",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tip by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/tips/your-tip-id-here",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Withdrawals",
+      "item": [
+        {
+          "name": "Create Withdrawal",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/withdrawals",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txHash\": \"0xabc123def456abc123def456abc123def456abc123def456abc123def456abc1\",\n  \"coin\": \"ETH\",\n  \"amount\": \"0.05\",\n  \"toAddress\": \"0xDestinationAddressHere\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Withdrawal by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/withdrawals/your-withdrawal-id-here",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Withdrawal History",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/withdrawals/history",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Preferences",
+      "item": [
+        {
+          "name": "Get Preferences",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/preferences",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/v1/preferences",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"defaultCurrency\": \"USD\",\n  \"minTipAmount\": \"0.001\",\n  \"defaultThankYouMessage\": \"Thanks for the tip!\",\n  \"autoAcceptTips\": true\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

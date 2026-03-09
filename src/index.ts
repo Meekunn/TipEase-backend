@@ -6,12 +6,14 @@ import usersRouter from "./routes/users.js";
 import tipsRouter from "./routes/tips.js";
 import withdrawalsRouter from "./routes/withdrawals.js";
 import preferencesRouter from "./routes/preferences.js";
+import { globalLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(globalLimiter);
 
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET is not set in .env");
