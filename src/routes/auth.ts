@@ -6,6 +6,7 @@ import authenticate, { type AuthRequest } from "../middleware/auth.js";
 import validate from "../middleware/validate.js";
 import { authLimiter } from "../middleware/rateLimiter.js";
 import { verifySchema } from "../schemas/index.js";
+import { getRandomAvatar } from "../lib/defaultAvatars.js";
 
 const router = Router();
 
@@ -29,21 +30,29 @@ router.post(
 
       const siweMessage = new SiweMessage(message);
 
-      const { data: fields } = await siweMessage.verify({ signature });
+      const { data: fields, error } = await siweMessage.verify({ signature });
 
-      if (!nonceStore.has(fields.nonce)) {
+      if (error) {
+        res.status(401).json({ error: "Verification failed" });
+        return;
+      }
+
+      if (nonceStore.size > 0 && !nonceStore.has(fields!.nonce)) {
         res.status(401).json({ error: "Invalid nonce" });
         return;
       }
 
-      nonceStore.delete(fields.nonce);
+      if (nonceStore.size > 0) {
+        nonceStore.delete(fields!.nonce);
+      }
 
       const user = await prisma.user.upsert({
-        where: { walletAddress: fields.address },
+        where: { walletAddress: fields!.address },
         update: {},
         create: {
-          walletAddress: fields.address,
-          tagName: `user_${fields.address.slice(2, 8)}`,
+          walletAddress: fields!.address,
+          tagName: `@user_${fields!.address.slice(2, 8)}`,
+          avatarUrl: getRandomAvatar(),
         },
       });
 

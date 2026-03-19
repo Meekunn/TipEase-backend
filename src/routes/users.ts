@@ -3,6 +3,8 @@ import prisma from "../lib/prisma.js";
 import authenticate, { type AuthRequest } from "../middleware/auth.js";
 import validate from "../middleware/validate.js";
 import { updateUserSchema } from "../schemas/index.js";
+import upload from "../middleware/upload.js";
+import cloudinary from "../lib/cloudinary.js";
 
 const router = Router();
 
@@ -30,18 +32,35 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
 router.put(
   "/me",
   authenticate,
+  upload.single("avatar"),
   validate(updateUserSchema),
   async (req: AuthRequest, res: Response) => {
     try {
-      const {
-        tagName,
-        bio,
-        avatarUrl,
-        instagram,
-        twitter,
-        tiktok,
-        showWalletAddress,
-      } = req.body;
+      const { tagName, bio, instagram, twitter, tiktok, showWalletAddress } =
+        req.body;
+
+      let avatarUrl: string | undefined;
+
+      if (req.file) {
+        const result = await new Promise<{ secure_url: string }>(
+          (resolve, reject) => {
+            cloudinary.uploader
+              .upload_stream(
+                {
+                  folder: "tipease/avatars",
+                  transformation: [{ width: 200, height: 200, crop: "fill" }],
+                },
+                (error, result) => {
+                  if (error || !result) reject(error);
+                  else resolve(result);
+                },
+              )
+              .end(req.file!.buffer);
+          },
+        );
+
+        avatarUrl = result.secure_url;
+      }
 
       const user = await prisma.user.update({
         where: { id: req.user!.userId },

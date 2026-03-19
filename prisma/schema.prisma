@@ -1,10 +1,9 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
 }
 
 model User {
@@ -19,7 +18,6 @@ model User {
   showWalletAddress Boolean     @default(true)
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-
   preference        Preference?
 }
 
@@ -48,12 +46,11 @@ model Withdrawal {
 }
 
 model Preference {
-  id                      String  @id @default(cuid())
-  userId                  String  @unique
-  defaultCurrency         String  @default("USD")
-  minTipAmount            String  @default("0")
-  defaultThankYouMessage  String?
-  autoAcceptTips          Boolean @default(true)
-
-  user                    User    @relation(fields: [userId], references: [id])
+  id                     String  @id @default(cuid())
+  userId                 String  @unique
+  defaultCurrency        String  @default("USD")
+  minTipAmount           String  @default("0")
+  defaultThankYouMessage String?
+  autoAcceptTips         Boolean @default(true)
+  user                   User    @relation(fields: [userId], references: [id])
 }
