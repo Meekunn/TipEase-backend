@@ -8,10 +8,26 @@ import withdrawalsRouter from "./routes/withdrawals.js";
 import preferencesRouter from "./routes/preferences.js";
 import { globalLimiter } from "./middleware/rateLimiter.js";
 
+const allowedOrigins = [
+  "http://localhost:5173", // local dev
+  "https://tip-ease.vercel.app/", // your actual Vercel URL
+];
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(globalLimiter);
 
